@@ -39,10 +39,15 @@ import { getPackageInfo, IPackageInfo } from './utils/IPackageInfo';
 
 // tslint:disable-next-line:export-name
 // tslint:disable-next-line:max-func-body-length
-export function activate(context: vscode.ExtensionContext): void {
+export async function activate(context: vscode.ExtensionContext): Promise<void> {
     registerUIExtensionVariables(ext);
     registerAppServiceExtensionVariables(ext);
     ext.context = context;
+
+    const cosmosExtension = await vscode.extensions.getExtension('ms-azuretools.vscode-cosmosdb');
+    if (cosmosExtension) {
+        ext.cosmosAPI = await cosmosExtension.activate();
+    }
 
     const packageInfo: IPackageInfo | undefined = getPackageInfo(context);
     if (packageInfo) {
@@ -322,9 +327,9 @@ export function activate(context: vscode.ExtensionContext): void {
             opn('https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-cosmosdb');
         }
     });
-    registerCommand('appService.AddCosmosDBConnection', addCosmosDBConnection);
     registerCommand('appService.RemoveCosmosDBConnection', removeCosmosDBConnection);
-    registerCommand('appService.RevealConnection', async (node: CosmosDBDatabase) => vscode.commands.executeCommand('cosmosDB.api.revealTreeItem', node.connectionId));
+    registerCommand('appService.AddCosmosDBConnection', addCosmosDBConnection);
+    registerCommand('appService.RevealConnection', async (node: CosmosDBDatabase) => ext.cosmosAPI.revealTreeItem(node.connectionId));
 }
 
 // tslint:disable-next-line:no-empty
